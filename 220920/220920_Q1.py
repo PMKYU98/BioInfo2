@@ -1,7 +1,9 @@
-money = 40
-Coins = [1,5,10,20,25,50]
+money = 17911
+Coins = [1,3,5,7,11,13,19,20,22]
 
-dicStack = {1: 1, 5: 1, 10: 1, 20: 1, 25: 1, 50: 1}
+dicStack = {}
+for coin in Coins:
+    dicStack[coin] =1
 
 for i in range(1,money+1):
     if i in dicStack: 
@@ -12,4 +14,5 @@ for i in range(1,money+1):
             temp = dicStack[j] + dicStack[i-j]
             if temp < dicStack[i]: dicStack[i] = temp
 
+print(dicStack)
 print(dicStack[money])
