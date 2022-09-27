@@ -9,26 +9,32 @@ sInput= '''
 '''
 
 
-class Node():
-    def __init__(self, num):
-        self._num = num
-        self._next = []
+class Queue:
+    def __init__(self):
+        self.list = []
 
-    def add_next(self, v, l):
-        self._next.append((v, l))
+    def add_element(self, u, longest):
+        templist = self.list
+        tempnode = [tup[0] for tup in templist]
+        if u in tempnode: 
+        
 
-class Graph():
+class Graph:
     def __init__(self, ed):
-        self.nodes = []
-        for i in range(ed+1):
-            self.nodes.append(Node(i))
+        self.visited = [True for i in range(ed + 1)]
+        self.next = [[] for i in range(ed + 1)]
+        self.edges = []
+        self.longest = [0 for i in range(ed + 1)]
 
-    def traverse(self):
-        ways = []
+        self.queue = Queue()
+
+    def add_edge(self, u, v, w):
+        self.edges.append((u, v, w))
+        self.next[u].append(v)
 
 
 def PARSE(s):
-    lines = sInput.strip().split('\n')
+    lines = s.strip().split('\n')
     st = int(lines[0])
     ed = int(lines[1])
     edges = []
@@ -45,6 +51,8 @@ st, ed, edges = PARSE(sInput)
 graph = Graph(ed)
 
 for edge in edges:
-    graph.nodes[edge[0]].add_next(edge[1], edge[2])
+    graph.add_edge(edge[0], edge[1], edge[2])
 
-print(graph.nodes[1]._next)
+print(graph.next)
+print(graph.edges)
+print(graph.visited)
