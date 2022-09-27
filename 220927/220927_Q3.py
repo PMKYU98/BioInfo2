@@ -33,3 +33,94 @@ for l in sPAM250.strip().split('\n')[1:]:
     PAM250[aa] = dict(zip(aminoacids, scores))
 
 gap = -5
+
+def PRINT_MATRIX(matScore):
+    for l in matScore:
+        print('\t'.join([str(i) for i in l]))
+
+def CALCULATE(x, y, matScore):
+    if x == 0:
+        return 0
+    if y == 0:
+        return 0
+
+    scoreDown = matScore[y-1][x] + gap
+    scoreRight = matScore[y][x-1] + gap
+    scoreDiagonal = matScore[y-1][x-1] + PAM250[sV[y-1]][sW[x-1]]
+    return max(0, scoreDown, scoreRight, scoreDiagonal)
+
+def INITIALIZE(n, m):
+    matScore = [[0] * (m+1) for i in range(n+1)]
+
+    for x in range(1,m+1):
+        matScore[0][x] = CALCULATE(x, 0, matScore)
+
+    for y in range(1,n+1):
+        matScore[y][0] = CALCULATE(0, y, matScore)
+
+    return matScore
+
+
+def TOUR(n, m, sV, sW, matScore):
+    for y in range(1, n+1):
+        for x in range(1, m+1):
+            matScore[y][x] = CALCULATE(x, y, matScore)
+
+    return matScore
+
+def FIND_MAX(matScore):
+    maxX, maxY, maxScore = 0, 0, 0
+    for y in range(len(matScore)):
+        for x in range(len(matScore[y])):
+            if matScore[y][x] > maxScore:
+                maxScore = matScore[y][x]
+                maxX, maxY = x, y
+
+    return maxX, maxY, maxScore
+
+
+def BACKTRACK(matScore):
+    i, j = n, m
+    subseq1 = []
+    subseq2 = []
+    while(i >= 1 and j >= 1):
+        if matScore[i][j] == matScore[i][j-1] - 5:
+            subseq1.append('-')
+            subseq2.append(sW[j-1])
+            j -= 1
+        elif matScore[i][j] == matScore[i-1][j] - 5: 
+            subseq1.append(sV[i-1])
+            subseq2.append('-')
+            i -= 1
+        else:
+            subseq1.append(sV[i-1])
+            subseq2.append(sW[j-1])
+            if matScore[i-1][j-1] == 0:
+                break
+
+            i -= 1
+            j -= 1
+            
+
+    substr1 = ''.join(reversed(subseq1))
+    substr2 = ''.join(reversed(subseq2))
+
+    print(matScore[n][m])
+    print(substr1)
+    print(substr2)
+
+
+sInput= '''
+MEANLY
+PENALTY
+'''
+
+sV, sW = sInput.split('\n')[1:-1]
+n, m = len(sV), len(sW)
+
+matScore = INITIALIZE(n, m)
+matScore = TOUR(n, m, sV, sW, matScore)
+PRINT_MATRIX(matScore)
+maxX, maxY, maxScore = FIND_MAX(matScore)
+print(maxX, maxY, maxScore)
+BACKTRACK(matScore)
