@@ -1,7 +1,15 @@
-sInput= '''
+sInput1 = '''
+PAWHEAE
+HEAGAWGHEE
+'''
+
+sInput2= '''
 CGTTCTAGAAGCAGAGGGCTGCAGGTTCTTGCTCTGCCATTCTTTTAAGATCATGCAGACATAACCAAGCCTCTAGGCGGATATTTACTAGTGCATCTGGGGCCCCCCCAAGCCGCGAGCAGAATACTACTGTGGTCTCAGGTAAAAGCGCCAGTCCTAGGGACAATTACTTTGTTTATAATTGGGTTCGTCTATCCTTAACATGAGGTGATATTTCTTGTGCGCAGATTCTGCACACCCAACGGTACGTCTCCAGTAGGCCACGAACCGCTCTGGGCGCCCCTGACTGCCCCTATAAGAATGACGCTCTTGACGGTAGCCTTGACAATTCGCATTGGTTCAGTCCGCCCTCGTCTAACGAGACCCCGTACGCCGGGAGCATATGCAGAGGAATGTCTGGCCAATATAGAATCATAGGCCGCCTGGTGGCATCATTATAAATCACCGGTGCCGGGTCTTAGCGACTTGAGGAGGGGGTATATTGACTCGTCACAGGGCTATCTGCTCCTGGTGATAATGTATACTTAAAGCAATTGAACACAATTAATCAATGGCTTAGTAGTAATTGAATAAGTAAATTACCTGGGCTCAATCGGCTCTCTGCAAACGATGTGGTAACTCCGCGTACGTGGCCGAACACCGGCCGAAAAGTCACTCACTTCCCCTCACGTTAGTAGGTACCGGTATCGAGATTATCGCACAGAGATGAGTCTGTACGAGAGATACTCCTGACCATCATTCTATAAGAGCACCAGGCATGAGCGGGCTCGCCCTATGATACCGCCTACGGACGGACCCGACAAATTTCTGGTACCCGAGCTAGCTTATTGAAACATCCGACTCAGAACCAGCAAGTATAGATTTTGTTTCACAACTGACCCCCAACCTAGTTAATGGTA
 TCTTAGGTTCCGGTATTGTTGATTCGTCGCACAGAGGTGAGTCTTATAGAGATACTCTTCAACCATCATTCTTAAGGGCTCACCAGGCGGTTAGCAAGCTCGCCTATAATTACTGCCTCCGATGACCCGGGAAGCCTGGGACCGAGCCGTGGGTGTACTGTAAAAACACCCGACTCAGGACCAAATGTATAAGATTCAGGTCTTACAGATTAATCCCGAACCACCAAACGGTAATACCCATTAAGTTCTTATCTCTACCAGGACTGAGTTCCTGTGAGCAAGAGGTAATTCACTGTTCATGCGAGGAAGAATCCTCTCGGAACCTCTCGCACTACCAAGCGCGGCGCTGCCTCTTACGTCTGCAGGTCCTGATACTAACTTAGATGCGTGAGAATCCGATTCACAGAGAAGCTGTACCGTCGCAGGCCGAGGATCGTCATAATCCTATACCACCGAGTTTTCACAGACACTCAATAGCGTCTCTAGTCGGACGACCGTTAGACGATCATCGCACTAGAACCGGTTAGTATTCGCTGCGGCACGCTATCCGCTGCTGATGACCAAACCTCGCTCCATTGCTCAAGGACACCGAACAAAGTGCAGGTCTAGTAATCGGGCGTTCAACACGAGTCTAGTTGGGGAGCCCCTAATTTTTTATACCCTCTCACCCGATTTTATCGTTAATCATTCGGTGTCGACTTTGAGCCCCACTCGTCCCAATTTAGGCAGACGCACCCCGTTTTGCTTTGCATTGACTTAGTGATAATATAGTTCCTTACGTTGTATAAAATAGCCATTGCGAAACAGGCAAATCCGCCGAGTTGTATCGTGACCTAACGATAATTAAAACAACCTGTGTTGCAGGCTCGCAGCGTTATAAAGGCAATGTTTGTATCCTTTGCGCATCTGACGACTTCTCACAACTTGGGCTCGTGATAAGAATAG
 '''
+
+
+sInput = sInput1
 
 match = 1
 penalty = -2
@@ -9,6 +17,7 @@ penalty = -2
 def PRINT_MATRIX(matScore):
     for l in matScore:
         print('\t'.join([str(i) for i in l]))
+    print('')
 
 def CALCULATE(sV, sW, x, y, matScore):
     if x == 0:
@@ -16,12 +25,9 @@ def CALCULATE(sV, sW, x, y, matScore):
     if y == 0:
         return matScore[y][x-1] + penalty
 
-    if x == len(sW):
-        scoreDown = matScore[y-1][x] + penalty * 10
-    else:
-        scoreDown = matScore[y-1][x] + penalty
+    scoreDown = matScore[y-1][x] + penalty
 
-    if y == len(sV):
+    if x == len(sW):
         scoreRight = matScore[y][x-1] + penalty * 10
     else:
         scoreRight = matScore[y][x-1] + penalty
@@ -51,31 +57,49 @@ def TOUR(sV, sW, n, m, matScore):
 
     return matScore
 
-sV, sW = sInput.split('\n')[1:-1]
+def BACKTRACK(n, m, sV, sW, matScore):
+    i, j = n, m
+    subseq1 = []
+    subseq2 = []
+    while(i >= 1 and j >= 1):
+        if matScore[i][j] == matScore[i][j-1] + penalty:
+            subseq1.append('-')
+            subseq2.append(sW[j-1])
+            j -= 1
+        elif matScore[i][j] == matScore[i-1][j] + penalty: 
+            subseq1.append(sV[i-1])
+            subseq2.append('-')
+            i -= 1
+        else:
+            subseq1.append(sV[i-1])
+            subseq2.append(sW[j-1])
+            i -= 1
+            j -= 1
+
+    substr1 = ''.join(reversed(subseq1))
+    substr2 = ''.join(reversed(subseq2))
+
+    return matScore[n][m], substr1, substr2
+
+sW, sV = sInput.split('\n')[1:-1]
 n, m = len(sV), len(sW)
 
-suffix_sV = []
-for i in range(len(sV)):
-    suffix_sV.append(sV[n-i-1:])
+matScore = INITIALIZE(sV, sW, n, m)
+matScore = TOUR(sV, sW, n, m, matScore)
+PRINT_MATRIX(matScore)
 
-prefix_sW = []
-for i in range(len(sW)):
-    prefix_sW.append(sW[:i+1])
+lastColumn = [row[-1] for row in matScore]
 
-scores = {}
-for suffix in suffix_sV:
-    for prefix in prefix_sW:
-        _n = len(suffix)
-        _m = len(prefix)
-        matScore = INITIALIZE(suffix, prefix, _n, _m)
-        matScore = TOUR(suffix, prefix, _n, _m, matScore)
+maxY = lastColumn.index(max(lastColumn))
+_, new_sW, new_sV = BACKTRACK(maxY, m, sV, sW, matScore)
 
-        if suffix == 'HEAE' and prefix == 'HEA':
-            PRINT_MATRIX(matScore)
+new_n, new_m = len(new_sV), len(new_sW)
 
-        scores[(suffix, prefix)] = matScore[_n][_m]
+matScore = INITIALIZE(new_sV, new_sW, new_n, new_m)
+matScore = TOUR(new_sV, new_sW, new_n, new_m, matScore)
+PRINT_MATRIX(matScore)
+score, align1, align2 = BACKTRACK(new_n, new_m, new_sV, new_sW, matScore)
 
-maxScore = max(scores.values())
-print(maxScore)
-maxScoreKeys = [k for k in scores.keys() if scores[k] == maxScore]
-print('\n'.join(maxScoreKeys[0]))
+print(score)
+print(align1)
+print(align2)
