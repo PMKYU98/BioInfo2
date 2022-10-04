@@ -42,56 +42,54 @@ diag = 'diag'
 def PRINT_MATRIX(mat):
     for l in mat:
         print('\t'.join([str(i) for i in l]))
+    print('')
 
-def CALCULATE(x, y, matScore, matArrow):
-    if x == 0:
-        return (matScore[y-1][x] + gap), up
-    if y == 0:
-        return matScore[y][x-1] + gap, left
+def CALCULATE(x, y):
+    matXGap[y][x] = max(gapopening + matMatch[y][x-1], gap + matXGap[y][x-1], gapopening + matYGap[y][x-1])
+    matYGap[y][x] = max(gapopening + matMatch[y-1][x], gapopening + matXGap[y-1][x], gap + matYGap[y-1][x])
 
-    if matArrow[y-1][x] == up:
-        scoreDown = matScore[y-1][x] + gap
-    else:
-        scoreDown = matScore[y-1][x] + gapopening
+    matchScore = BLOSUM62[sV[y-1]][sW[x-1]]
+    matMatch[y][x] = max(matMatch[y-1][x-1], matXGap[y-1][x-1], matYGap[y-1][x-1]) + matchScore
 
-    if matArrow[y][x-1] == left:
-        scoreRight = matScore[y][x-1] + gap
-    else:
-        scoreRight = matScore[y][x-1] + gapopening
+    what_is_max = max(matMatch[y][x], matXGap[y][x], matYGap[y][x])
 
-    scoreDiagonal = matScore[y-1][x-1] + BLOSUM62[sV[y-1]][sW[x-1]]
-    
-    if scoreDown >= scoreRight:
-        if scoreDown >= scoreDiagonal:
-            return scoreDown, up
-        else:
-            return scoreDiagonal, diag
-    elif scoreRight >= scoreDiagonal:
-        return scoreRight, left
-    else:
-        return scoreDiagonal, diag
+    if what_is_max == matYGap[y][x]: matArrow[y][x] = up
+    elif what_is_max == matXGap[y][x]: matArrow[y][x] = left
+    elif what_is_max == matMatch[y][x]: matArrow[y][x] = diag
+
+    matScore[y][x] = what_is_max
 
 def INITIALIZE(n, m):
     matScore = [[0] * (m+1) for i in range(n+1)]
+    matMatch = [[0] * (m+1) for i in range(n+1)]
+    matXGap = [[0] * (m+1) for i in range(n+1)]
+    matYGap = [[0] * (m+1) for i in range(n+1)]
     matArrow = [[none] * (m+1) for i in range(n+1)]
 
     for x in range(1,m+1):
-        matScore[0][x], matArrow[0][x] = CALCULATE(x, 0, matScore, matArrow)
+        matMatch[0][x] = NEG_INF
+        matXGap[0][x] = gapopening + gap * (x-1)
+        matYGap[0][x] = NEG_INF
+        matScore[0][x] = max(matMatch[0][x], matXGap[0][x], matYGap[0][x])
+        matArrow[0][x] = left
 
     for y in range(1,n+1):
-        matScore[y][0], matArrow[y][0] = CALCULATE(0, y, matScore, matArrow)
+        matMatch[y][0] = NEG_INF
+        matXGap[y][0] = NEG_INF
+        matYGap[y][0] = gapopening + gap * (y-1)
+        matScore[y][0] = max(matMatch[y][0], matXGap[y][0], matYGap[y][0])
+        matArrow[y][0] = up
 
-    return matScore, matArrow
+    return matScore, matMatch, matXGap, matYGap, matArrow
 
 
-def TOUR(n, m, sV, sW, matScore, matArrow):
+def TOUR():
     for y in range(1, n+1):
         for x in range(1, m+1):
-            matScore[y][x], matArrow[y][x] = CALCULATE(x, y, matScore, matArrow)
+            CALCULATE(x, y)
 
-    return matScore, matArrow
 
-def BACKTRACK(n, m, sV, sW, matScore, matArrow):
+def BACKTRACK(n, m):
     i, j = n, m
     subseq1 = []
     subseq2 = []
@@ -118,18 +116,68 @@ def BACKTRACK(n, m, sV, sW, matScore, matArrow):
     print(substr2)
 
 
-sInput= '''
+sInput1= '''
 DVTHKCPAAEQHDRVNADMLCDTQMGFADNTKPPFPWALIECDSARLNLWKCFIRYEHCHYQKKRCDVWNIVIPIPFPRYNMLSCTNPFV
 DVTHKCLVHRGQVNADMLCDTQCFETGKKTRADTVWALIECDSRSPPSNAINLWKCFARVWNKINLFEVIPIPAPRENDLSVTNPFV
 '''
 
+sInput2 = '''
+FSSWGPREILGCAFSWSTTNKLNIGYDPIISPYCVDNDDSYAKFQFWAKRWCVVCQVTRDIFRVLQPPYGQCD
+FSSWHEWPTPSAPREILGCRHHYHFSWSTTNKRRWDGNIGYDSKIIPMWACSPYCVDNWMSYAKRWCVVCNVTRDLPYGQCD
+'''
+
+sInput3 = '''
+LCFIVWYRSQERRQHRWRTGFPNCFHNFPRWWRGIPVQCIMLIEWLRWMPEQGKQPCMPFEPDTCEDQYRAVAD
+LCFIVRQWRTGFPNCFHNFRWWRGIPVQCIMEIQGKQPCMAFEPDTCEDKYRAVAS
+'''
+
+sInput3_1 = '''
+LIEWLRWMPEQGK
+EIQGK
+'''
+
+sInput3_2 = '''
+LIEWLRWM
+EIQGK
+'''
+
+sInput4 = '''
+PRTEINS
+PRTWPSEIN
+'''
+
+sInput5 = '''
+LVYCAMQMAPAHRFRQARHHWASIPWEYEMRLWWTSVFNFRKNAWITYRYWTWHHSTIWWEWTKNPIAETGDYYCGSEDTPSDM
+RHHWASGPWTYEMYMEKHLWWTSFFNFRKWCPDQQTITERYHHSTIWVERAMWTKNPIQETGDYYCGSEDTPHDM
+'''
+
+sInput5_1 = '''
+YEMR
+YEMYMEKH
+'''
+
+sInput6 = '''
+NSWFADRVTYYPVCLTFAYLHMAPNKVAGLWIMCDESAYYWFPVSWNEDCLAPLFSVIAKFDCPHDEPHPPKSQHCVIHMD
+NSVFADRVLYYPVCLTFAVLHMAPNKVAGLAYYKEPIAMSNEDCLAKFCCPHDEPHYASNWLWPKSQHCVIHMD
+'''
+
+sInput6_1 = '''
+PHPP
+PHYASNWLWP
+'''
+
+sInput = sInput3_1
+
 sV, sW = sInput.split('\n')[1:-1]
 n, m = len(sV), len(sW)
 
-matScore, matArrow = INITIALIZE(n, m)
-# matArrow
-# 0: None, 1: Up, 2: Left, 3: Diagonal
-matScore, matArrow = TOUR(n, m, sV, sW, matScore, matArrow)
+NEG_INF = max(n, m) * gapopening - 1
+
+matScore, matMatch, matXGap, matYGap, matArrow = INITIALIZE(n, m)
+TOUR()
 PRINT_MATRIX(matScore)
+PRINT_MATRIX(matMatch)
+PRINT_MATRIX(matXGap)
+PRINT_MATRIX(matYGap)
 PRINT_MATRIX(matArrow)
-BACKTRACK(n, m, sV, sW, matScore, matArrow)
+BACKTRACK(n, m)
