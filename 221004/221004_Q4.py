@@ -32,8 +32,8 @@ for l in sBLOSUM62.strip().split('\n')[1:]:
     scores = [int(i) for i in temp[1:] if i != '']
     BLOSUM62[aa] = dict(zip(aminoacids, scores))
 
-gapopening = -11
 gap = -1
+gapopening = -11 + gap
 none = 'none'
 left = 'left'
 up = 'up'
@@ -45,17 +45,17 @@ def PRINT_MATRIX(mat):
     print('')
 
 def CALCULATE(x, y):
-    matXGap[y][x] = max(gapopening + matMatch[y][x-1], gap + matXGap[y][x-1], gapopening + matYGap[y][x-1])
-    matYGap[y][x] = max(gapopening + matMatch[y-1][x], gapopening + matXGap[y-1][x], gap + matYGap[y-1][x])
+    matXGap[y][x] = max(gapopening + matScore[y][x-1], gap + matXGap[y][x-1], gapopening + matYGap[y][x-1])
+    matYGap[y][x] = max(gapopening + matScore[y-1][x], gapopening + matXGap[y-1][x], gap + matYGap[y-1][x])
 
     matchScore = BLOSUM62[sV[y-1]][sW[x-1]]
-    matMatch[y][x] = max(matMatch[y-1][x-1], matXGap[y-1][x-1], matYGap[y-1][x-1]) + matchScore
+    matScore[y][x] = matScore[y-1][x-1] + matchScore
 
-    what_is_max = max(matMatch[y][x], matXGap[y][x], matYGap[y][x])
+    what_is_max = max(matScore[y][x], matXGap[y][x], matYGap[y][x])
 
-    if what_is_max == matYGap[y][x]: matArrow[y][x] = up
-    elif what_is_max == matXGap[y][x]: matArrow[y][x] = left
-    elif what_is_max == matMatch[y][x]: matArrow[y][x] = diag
+    if what_is_max == matXGap[y][x]: matArrow[y][x] = left
+    elif what_is_max == matYGap[y][x]: matArrow[y][x] = up
+    elif what_is_max == matScore[y][x]: matArrow[y][x] = diag
 
     matScore[y][x] = what_is_max
 
@@ -116,26 +116,6 @@ def BACKTRACK(n, m):
     print(substr2)
 
 
-sInput1= '''
-DVTHKCPAAEQHDRVNADMLCDTQMGFADNTKPPFPWALIECDSARLNLWKCFIRYEHCHYQKKRCDVWNIVIPIPFPRYNMLSCTNPFV
-DVTHKCLVHRGQVNADMLCDTQCFETGKKTRADTVWALIECDSRSPPSNAINLWKCFARVWNKINLFEVIPIPAPRENDLSVTNPFV
-'''
-
-sInput2 = '''
-FSSWGPREILGCAFSWSTTNKLNIGYDPIISPYCVDNDDSYAKFQFWAKRWCVVCQVTRDIFRVLQPPYGQCD
-FSSWHEWPTPSAPREILGCRHHYHFSWSTTNKRRWDGNIGYDSKIIPMWACSPYCVDNWMSYAKRWCVVCNVTRDLPYGQCD
-'''
-
-sInput3 = '''
-LCFIVWYRSQERRQHRWRTGFPNCFHNFPRWWRGIPVQCIMLIEWLRWMPEQGKQPCMPFEPDTCEDQYRAVAD
-LCFIVRQWRTGFPNCFHNFRWWRGIPVQCIMEIQGKQPCMAFEPDTCEDKYRAVAS
-'''
-
-sInput3_1 = '''
-LIEWLRWMPEQGK
-EIQGK
-'''
-
 sInput3_2 = '''
 LIEWLRWM
 EIQGK
@@ -151,22 +131,12 @@ LVYCAMQMAPAHRFRQARHHWASIPWEYEMRLWWTSVFNFRKNAWITYRYWTWHHSTIWWEWTKNPIAETGDYYCGSEDT
 RHHWASGPWTYEMYMEKHLWWTSFFNFRKWCPDQQTITERYHHSTIWVERAMWTKNPIQETGDYYCGSEDTPHDM
 '''
 
-sInput5_1 = '''
-YEMR
-YEMYMEKH
-'''
-
-sInput6 = '''
-NSWFADRVTYYPVCLTFAYLHMAPNKVAGLWIMCDESAYYWFPVSWNEDCLAPLFSVIAKFDCPHDEPHPPKSQHCVIHMD
-NSVFADRVLYYPVCLTFAVLHMAPNKVAGLAYYKEPIAMSNEDCLAKFCCPHDEPHYASNWLWPKSQHCVIHMD
-'''
-
 sInput6_1 = '''
 PHPP
 PHYASNWLWP
 '''
 
-sInput = sInput3_1
+sInput = sInput6_1
 
 sV, sW = sInput.split('\n')[1:-1]
 n, m = len(sV), len(sW)
@@ -176,7 +146,6 @@ NEG_INF = max(n, m) * gapopening - 1
 matScore, matMatch, matXGap, matYGap, matArrow = INITIALIZE(n, m)
 TOUR()
 PRINT_MATRIX(matScore)
-PRINT_MATRIX(matMatch)
 PRINT_MATRIX(matXGap)
 PRINT_MATRIX(matYGap)
 PRINT_MATRIX(matArrow)
