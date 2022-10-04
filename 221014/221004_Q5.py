@@ -32,75 +32,52 @@ for l in sBLOSUM62.strip().split('\n')[1:]:
     scores = [int(i) for i in temp[1:] if i != '']
     BLOSUM62[aa] = dict(zip(aminoacids, scores))
 
-gapopening = -11
-gap = -1
-none = 'none'
-left = 'left'
-up = 'up'
-diag = 'diag'
+gap = -5
 
-def PRINT_MATRIX(mat):
-    for l in mat:
+def PRINT_MATRIX(matScore):
+    for l in matScore:
         print('\t'.join([str(i) for i in l]))
 
-def CALCULATE(x, y, matScore, matArrow):
+def CALCULATE(x, y, matScore):
     if x == 0:
-        return (matScore[y-1][x] + gap), up
+        return matScore[y-1][x] + gap
     if y == 0:
-        return matScore[y][x-1] + gap, left
+        return matScore[y][x-1] + gap
 
-    if matArrow[y-1][x] == up:
-        scoreDown = matScore[y-1][x] + gap
-    else:
-        scoreDown = matScore[y-1][x] + gapopening
-
-    if matArrow[y][x-1] == left:
-        scoreRight = matScore[y][x-1] + gap
-    else:
-        scoreRight = matScore[y][x-1] + gapopening
-
+    scoreDown = matScore[y-1][x] + gap
+    scoreRight = matScore[y][x-1] + gap
     scoreDiagonal = matScore[y-1][x-1] + BLOSUM62[sV[y-1]][sW[x-1]]
-    
-    if scoreDown >= scoreRight:
-        if scoreDown >= scoreDiagonal:
-            return scoreDown, up
-        else:
-            return scoreDiagonal, diag
-    elif scoreRight >= scoreDiagonal:
-        return scoreRight, left
-    else:
-        return scoreDiagonal, diag
+    return max(scoreDown, scoreRight, scoreDiagonal)
 
 def INITIALIZE(n, m):
     matScore = [[0] * (m+1) for i in range(n+1)]
-    matArrow = [[none] * (m+1) for i in range(n+1)]
 
     for x in range(1,m+1):
-        matScore[0][x], matArrow[0][x] = CALCULATE(x, 0, matScore, matArrow)
+        matScore[0][x] = CALCULATE(x, 0, matScore)
 
     for y in range(1,n+1):
-        matScore[y][0], matArrow[y][0] = CALCULATE(0, y, matScore, matArrow)
+        matScore[y][0] = CALCULATE(0, y, matScore)
 
-    return matScore, matArrow
+    return matScore
 
 
-def TOUR(n, m, sV, sW, matScore, matArrow):
+def TOUR(n, m, sV, sW, matScore):
     for y in range(1, n+1):
         for x in range(1, m+1):
-            matScore[y][x], matArrow[y][x] = CALCULATE(x, y, matScore, matArrow)
+            matScore[y][x] = CALCULATE(x, y, matScore)
 
-    return matScore, matArrow
+    return matScore
 
-def BACKTRACK(n, m, sV, sW, matScore, matArrow):
+def BACKTRACK(n, m, sV, sW, matScore):
     i, j = n, m
     subseq1 = []
     subseq2 = []
     while(i >= 1 or j >= 1):
-        if matArrow[i][j] == left:
+        if matScore[i][j] == matScore[i][j-1] + gap:
             subseq1.append('-')
             subseq2.append(sW[j-1])
             j -= 1
-        elif matArrow[i][j] == up: 
+        elif matScore[i][j] == matScore[i-1][j] + gap: 
             subseq1.append(sV[i-1])
             subseq2.append('-')
             i -= 1
@@ -117,19 +94,45 @@ def BACKTRACK(n, m, sV, sW, matScore, matArrow):
     print(substr1)
     print(substr2)
 
+def MIDDLEEDGE(n, m, sV, sW, matScore):
+    i, j = n, m
+    middleCol = m / 2
+    subseq1 = []
+    subseq2 = []
+    arrow = 'none'
+    while(i >= 1 or j >= 1):
+        if matScore[i][j] == matScore[i][j-1] + gap:
+            j -= 1
+            arrow = 'left'
+        elif matScore[i][j] == matScore[i-1][j] + gap: 
+            i -= 1
+            arrow = 'up'
+        else:
+            i -= 1
+            j -= 1
+            arrow = 'diag'
+
+        if j <= middleCol:
+            break
+    
+    if arrow == 'left':
+        return '(%d, %d) (%d, %d)' % (i, j, i+1, j)
+    elif arrow == 'up':
+        return '(%d, %d) (%d, %d)' % (i, j, i, j+1)
+    else:
+        return '(%d, %d) (%d, %d)' % (i, j, i+1, j+1)
+
 
 sInput= '''
-DVTHKCPAAEQHDRVNADMLCDTQMGFADNTKPPFPWALIECDSARLNLWKCFIRYEHCHYQKKRCDVWNIVIPIPFPRYNMLSCTNPFV
-DVTHKCLVHRGQVNADMLCDTQCFETGKKTRADTVWALIECDSRSPPSNAINLWKCFARVWNKINLFEVIPIPAPRENDLSVTNPFV
+GAGA
+GAT
 '''
 
 sV, sW = sInput.split('\n')[1:-1]
 n, m = len(sV), len(sW)
 
-matScore, matArrow = INITIALIZE(n, m)
-# matArrow
-# 0: None, 1: Up, 2: Left, 3: Diagonal
-matScore, matArrow = TOUR(n, m, sV, sW, matScore, matArrow)
+matScore = INITIALIZE(n, m)
+matScore = TOUR(n, m, sV, sW, matScore)
 PRINT_MATRIX(matScore)
-PRINT_MATRIX(matArrow)
-BACKTRACK(n, m, sV, sW, matScore, matArrow)
+
+print(MIDDLEEDGE(n, m, sV, sW, matScore))
