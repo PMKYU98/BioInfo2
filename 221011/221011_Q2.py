@@ -66,7 +66,7 @@ sInput3 = '''
 1987 1042 945 8948 5142 6811 8188 1389 6314 7330 2896 5900 1426 604 1437 8175 8660 1780 4951 4179 7658 7693 1341 0
 '''
 
-sInput = sInput3
+sInput = sInput1
 
 def PRINT_MATRIX(mat):
     for l in mat:
