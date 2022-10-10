@@ -68,20 +68,6 @@ sInput3 = '''
 
 sInput = sInput1
 
-def PRINT_MATRIX(mat):
-    for l in mat:
-        print('\t'.join([str(i) for i in l]))
-
-def MATRIX_TO_FILE(mat):
-    temp = ['']
-    for l in mat:
-        temp.append('\t'.join([str(i) for i in l]))
-    temp.append('')
-
-    sOutput = '\n'.join(temp)
-    with open('221011/221011_Q1_output.txt', 'w') as f:
-        f.write(sOutput)
-
 def PARSE(sInput):
     lines = sInput.strip().split('\n')
     n = int(lines[0])
