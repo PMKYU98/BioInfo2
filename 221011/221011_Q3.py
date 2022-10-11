@@ -36,63 +36,72 @@ def LIMBLENGTH(i):
     
     return min(temp)
 
-def MAKE_BALD(n, matDist):
-    limblength = LIMBLENGTH(n)
-    for j in range(n):
-        matDist[n][j] -= limblength
-        matDist[j][n] = matDist[n][j]
+def MAKE_BALD(n, j, matDist):
+    limblength = LIMBLENGTH(j)
+    for i in range(n+1):
+        print(i, j)
+        if i != j:
+            matDist[i][j] -= limblength
+            matDist[j][i] = matDist[i][j]
 
 # find i,n,k which is Di,k = Di,n + Dn,k
-def FIND_INK(n, matDist):
+def FIND_INK(n, j, matDist):
     trio = None
-    for i in range(n):
-        if n == i: continue
+    for i in range(n+1):
+        if j == i: continue
         if trio is not None: break
-        for k in range(i, n):
-            if n == k or n == i: continue
-            if matDist[i][k] == matDist[i][n] + matDist[n][k]:
-                trio = (i, n, k)
+        for k in range(n+1):
+            if k == i or j == k or j == i: continue
+            if matDist[i][k] == matDist[i][j] + matDist[j][k]:
+                trio = (i, j, k)
                 break
 
     return trio
 
 def TRIM(n, matDist):
-    return [matDist[i][:n] for i in range(n)]
+    temp = []
+    for i in range(len(matDist)):
+        if i != n:
+            temp_row = []
+            for j in range(len(matDist[i])):
+                if j != n:
+                    temp_row.append(matDist[i][j])
+            temp.append(temp_row)
 
-def ADDITIVE_PHYLOGENY(n, matDist):
-    global lstTree, maxnode
+    return temp
 
+def ADDITIVE_PHYLOGENY(n, j, matDist):
+    print('ADDITIVE_PHYLOGENY %d, %d----------' % (n, j))
     if n == 1:
-        lstTree.append((0, 1, matDist[0][1]))
-        lstTree.append((1, 0 , matDist[1][0]))
+        PRINT_MATRIX(matDist)
+        return
     
-    print('')
+    print('\nD')
     PRINT_MATRIX(matDist)
-    limblength = LIMBLENGTH(n)
-    print(LIMBLENGTH(n))
-    MAKE_BALD(n, matDist)
-    print('')
+    limblength = LIMBLENGTH(j)
+    print('Limblength: ', LIMBLENGTH(j))
+    MAKE_BALD(n, j, matDist)
+    print('\nDbald')
     PRINT_MATRIX(matDist)
 
-    i, _, k = FIND_INK(n, matDist)
-    x = matDist[i][n]
+    ink = FIND_INK(n, j, matDist)
+    if ink is None:
+        print('No degenerate')
+        ADDITIVE_PHYLOGENY(n, j-1, matDist)
+    else: 
+        i, j, k = ink
+        print('i, n, k = ', i, j, k)
+        x = matDist[i][j]
+        print('x = ', x)
 
-    lstTree.append((n, maxnode, limblength))
-    lstTree.append((maxnode, n, limblength))
-    maxnode += 1
-    print(lstTree)
+        matDist = TRIM(n, matDist)
 
-    matDist = TRIM(n, matDist)
-    ADDITIVE_PHYLOGENY(n-1, matDist)
+        ADDITIVE_PHYLOGENY(n-1, n-1, matDist)
     
 
     
 
 n, matDist = PARSE(sInput)
-PRINT_MATRIX(matDist)
 _n = n-1
 _matDist = matDist
-maxnode = n
-lstTree = []
-ADDITIVE_PHYLOGENY(_n, _matDist)
-print(lstTree)
+ADDITIVE_PHYLOGENY(_n, _n, _matDist)
