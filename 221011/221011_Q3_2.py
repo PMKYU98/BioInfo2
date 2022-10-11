@@ -31,8 +31,7 @@ def PARSE(sInput):
     return n, matDist
 
 def PRINT_TREE(tree):
-    print('------------')
-    for edge in tree:
+    for edge in sorted(tree):
         print('%d->%d:%d' % (edge[0], edge[1], edge[2]))
 
 def DELETE_EDGE(tree, st, ed):
@@ -57,19 +56,32 @@ def GET_DIST(tree, st, ed):
 
     return tree[i][2]
 
-def GET_NEW_NUM(tree):
-    max_num = 0
-    for i in range(len(tree)):
-        max_num = max(max_num, tree[i][0], tree[i][1])
-    
-    return max_num + 1
+def GET_PATH(tree, st, ed, visited):
+    visited[st] = True
+    next_v = [edge[1] for edge in tree if edge[0] == st]
+    for v in next_v:
+        if visited[v] == True: continue
+        if v == ed: return [st, ed]
+
+        return [st] + GET_PATH(tree, v, ed, visited)
+
+def PLACE_LAYOVER(tree, st, ed, dist):
+    path = GET_PATH(tree, st, ed, [False for _ in range(maxnode)])
+
+    stack = 0
+    for i in range(1, len(path)):
+        if stack + GET_DIST(tree, path[i-1], path[i]) >= dist:
+            break
+        stack += GET_DIST(tree, path[i-1], path[i])
+    return path[i-1], path[i], dist - stack
 
 def ADD_LAYOVER(tree, st, ed, dist):
     global maxnode
-    #layover = GET_NEW_NUM(tree)
-    ADD_EDGE(tree, st, maxnode, dist)
-    ADD_EDGE(tree, maxnode, ed, GET_DIST(tree, st, ed) - dist)
-    DELETE_EDGE(tree, st, ed)
+    
+    v, w, d = PLACE_LAYOVER(tree, st, ed, dist)
+    ADD_EDGE(tree, v, maxnode, d)
+    ADD_EDGE(tree, maxnode, w, GET_DIST(tree, v, w) - d)
+    DELETE_EDGE(tree, v, w)
     maxnode += 1
 
 def LIMBLENGTH(i, matDist):
@@ -98,8 +110,6 @@ def TRIM(n, matDist):
 
 def ADDITIVE_PHYLOGENY(n, matDist):
     global maxnode
-
-    PRINT_MATRIX(matDist, True)
     _n = n - 1
     if n == 2:
         tree = []
@@ -110,25 +120,20 @@ def ADDITIVE_PHYLOGENY(n, matDist):
     for i in range(_n):
         matDist[i][_n] -= limb
         matDist[_n][i] = matDist[i][_n]
-    PRINT_MATRIX(matDist, True)
-    
+
     i, _, k = FIND_INK(_n, matDist)
-    print(i, _n, k)
     x = matDist[i][_n]
     
     matDist = TRIM(_n, matDist)
 
-    PRINT_MATRIX(matDist, True)
     tree = ADDITIVE_PHYLOGENY(n-1, matDist)
 
     ADD_EDGE(tree, maxnode, _n, limb)
     ADD_LAYOVER(tree, i, k, x)
     
-
     return tree
 
 n, matDist = PARSE(sInput)
-PRINT_MATRIX(matDist)
 maxnode = n
 Tree = ADDITIVE_PHYLOGENY(n, matDist)
 PRINT_TREE(Tree)
