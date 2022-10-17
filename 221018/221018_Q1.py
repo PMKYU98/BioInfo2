@@ -169,8 +169,7 @@ def NEIGHBOR_JOINING(n, matD):
 
     return tree
 
-
-            
+      
 n, matD = PARSE(sInput, delimiter='\t')
 lstClstrs, dirChildren, dirLimb = INITIALIZE(n)
 Tree = NEIGHBOR_JOINING(n, matD)
