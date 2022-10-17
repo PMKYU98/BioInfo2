@@ -70,7 +70,6 @@ def DELETE_EDGE(tree, st, ed):
 def ADD_EDGE(tree, st, ed, dist):
     tree.append((st, ed, dist))
     tree.append((ed, st, dist))
-    global maxnode
 
 def PRINT_MATRIX(mat, newline=False):
     if newline: print('')
