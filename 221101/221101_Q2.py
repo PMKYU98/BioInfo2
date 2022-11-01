@@ -39,6 +39,6 @@ def DISTORTION(centers):
     return temp / len(points)
 
 
-inputfile = '221101/221101_Q2_input2.txt'
+inputfile = '221101/221101_Q2_input3.txt'
 k, m, centers, points = PARSE(inputfile)
 print('%.3f' % DISTORTION(centers))
