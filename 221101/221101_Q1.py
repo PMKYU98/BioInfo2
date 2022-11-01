@@ -34,13 +34,13 @@ def DIST(v, w):
     
     return math.sqrt(temp)
 
-def MAX_DIST(v, centers):
-    return max([DIST(v, center) for center in centers])
+def MIN_DIST(v, centers):
+    return min([DIST(v, center) for center in centers])
 
 def FIND_NEXT_CENTER(centers):
     global points 
 
-    dists = [MAX_DIST(point, centers) for point in range(len(points))]
+    dists = [MIN_DIST(point, centers) for point in range(len(points))]
     max_dist = max(dists)
     max_v = dists.index(max_dist)
 
@@ -63,13 +63,7 @@ def FFT(k):
     return centers
 
 
-inputfile = '221101/221101_Q1_input2.txt'
+inputfile = '221101/221101_Q1_input3.txt'
 k, m, points = PARSE(inputfile)
 centers = FFT(k)
 PRINT_CENTERS(m, centers)
-print(centers)
-print(points[345])
-print(DIST(0, 1129))
-print(DIST(651, 1129))
-print(DIST(0, 345))
-print(DIST(651, 345))
