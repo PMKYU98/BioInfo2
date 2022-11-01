@@ -59,7 +59,7 @@ def LLOYD(centers, points):
     return new_centers
 
 
-inputfile = '221101/221101_Q3_input2.txt'
+inputfile = '221101/221101_Q3_input3.txt'
 k, m, points = PARSE(inputfile)
 centers = LLOYD(points[:k], points)
 PRINT_CENTERS(centers)
