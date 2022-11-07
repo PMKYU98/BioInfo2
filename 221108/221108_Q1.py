@@ -90,7 +90,7 @@ def SOFT_KMEANS(k, beta, iter, lPoints):
     return lCenters
             
 
-inputfile = '221108/221108_Q1_input2.txt'
+inputfile = '221108/221108_Q1_input3.txt'
 
 k, beta, lPoints = PARSE(inputfile)
 lCenters = SOFT_KMEANS(k, beta, 100, lPoints)
