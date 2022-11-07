@@ -16,6 +16,14 @@ def PARSE(fInput, delimiter=' '):
 
     return k, beta, lPoints
 
+def PRINT_POINTS(points):
+    m = len(points[0])
+    string = ' '.join(['%.1f'] * m)
+    for point in points:
+        loc = ['%.3f' % x for x in point]
+        string = ' '.join(loc)
+        print(string)
+
 def DIST(v, w):
     temp = 0
     for x1, x2 in zip(v, w):
@@ -33,13 +41,30 @@ def DOT(array1, array2):
 def NTH_COORD(n, lPoints):
     return [point[n] for point in lPoints]
 
-def HIDDEN_MATRIX_HELPER(beta, center, lPoints):
-    temp = [math.exp(-1 * beta * DIST(point, center)) for point in lPoints]
-    denom = sum(temp)
-    return [numer / denom for numer in temp]
-
 def HIDDEN_MATRIX(beta, lCenters, lPoints):
-    matHidden = [HIDDEN_MATRIX_HELPER(beta, center, lPoints) for center in lCenters]
+    tempHidden = []
+    for i in range(len(lCenters)):
+        rowHidden = []
+        center = lCenters[i]
+        for j in range(len(lPoints)):
+            data = lPoints[j]
+            value = 1 / math.exp(beta * DIST(data, center))
+            rowHidden.append(value)
+
+        tempHidden.append(rowHidden)
+    
+    rowSum = []
+    for j in range(len(lPoints)):
+        temp = 0
+        for i in range(len(lCenters)):
+            temp += tempHidden[i][j]
+        rowSum.append(temp)
+    
+    matHidden = []
+    for i in range(len(lCenters)):
+        temp = [tempHidden[i][j] / rowSum[j] for j in range(len(lPoints))]
+        matHidden.append(temp)
+
     return matHidden
 
 def SOFT_KMEANS(k, beta, iter, lPoints):
@@ -59,13 +84,14 @@ def SOFT_KMEANS(k, beta, iter, lPoints):
                 new_center.append(x_ij)
 
             lCenters_new.append(new_center)
+        
+        lCenters = lCenters_new
 
-    return lCenters_new
+    return lCenters
             
 
-inputfile = '221108/221108_Q1_input1.txt'
+inputfile = '221108/221108_Q1_input2.txt'
 
 k, beta, lPoints = PARSE(inputfile)
-matHidden = HIDDEN_MATRIX(beta, lPoints[:2], lPoints)
 lCenters = SOFT_KMEANS(k, beta, 100, lPoints)
-print(lCenters)
+PRINT_POINTS(lCenters)
