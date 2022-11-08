@@ -111,6 +111,6 @@ def HIERARCHICAL_CLUSTERING(n, matDist):
         lClusters, dicElements, matDist = MERGE_DIST(minY, minX, lClusters, dicElements, matDist)
         
 
-inputfile = '221108/221108_Q2_input3.txt'
+inputfile = '221108/221108_Q2_input4.txt'
 n, matDist = PARSE(inputfile)
 HIERARCHICAL_CLUSTERING(n, matDist)
