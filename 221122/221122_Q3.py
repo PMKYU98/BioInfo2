@@ -17,7 +17,7 @@ def MOVE_CURSOR(cursor, char, dicPosFirst, dicPosLast):
     idx = dicPosLast[char].index(cursor)
     return dicPosFirst[char][idx]
 
-inputfile = '221122/221122_Q3_input1.txt'
+inputfile = '221122/221122_Q3_input2.txt'
 sLast, idx = PARSE(inputfile)
 sFirst = ''.join(sorted(sLast))
 
