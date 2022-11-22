@@ -89,7 +89,7 @@ def BWMATCHING(sLast, pattern, K):
     return -1
 
 
-inputfile = '221122/221122_Q6_input1.txt'
+inputfile = '221122/221122_Q6_input2.txt'
 K = 7
 sString, lstPattern = PARSE(inputfile)
 sLast = BWT(CYCLIC_ROTATION(list(sString)))
