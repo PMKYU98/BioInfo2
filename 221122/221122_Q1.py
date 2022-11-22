@@ -23,7 +23,7 @@ def CYCLIC_ROTATION(lstInput):
 def BWT(matInput):
     return ''.join([row[-1] for row in matInput])
 
-inputfile = '221122/221122_Q1_input1.txt'
+inputfile = '221122/221122_Q1_input2.txt'
 lstInput = PARSE(inputfile)
 matInput = CYCLIC_ROTATION(lstInput)
 WRITE_OUTPUT(BWT(matInput))
