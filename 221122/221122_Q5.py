@@ -34,7 +34,7 @@ def BWMATCHING(sFirst, sLast, pattern):
         else:
             return bottom - top + 1
 
-inputfile = '221122/221122_Q5_input1.txt'
+inputfile = '221122/221122_Q5_input2.txt'
 sLast, lstPattern = PARSE(inputfile)
 sFirst = ''.join(sorted(sLast))
 
