@@ -25,12 +25,8 @@ def MOVE_CURSOR(cursor, char, dicPosFirst, dicPosLast):
 
 def INVERSION(sInput):
     sFirst, sLast = ''.join(sorted(sInput)), sInput
-    print(sFirst)
-    print(sLast)
 
     dicPosFirst, dicPosLast = POSITION(sFirst), POSITION(sLast)
-    print(dicPosFirst)
-    print(dicPosLast)
     temp = ['$']
     cursor = 0
 
@@ -41,7 +37,7 @@ def INVERSION(sInput):
     return ''.join(reversed(temp))
 
 
-inputfile = '221122/221122_Q2_input1.txt'
+inputfile = '221122/221122_Q2_input2.txt'
 sInput = PARSE(inputfile)
 sOutput = INVERSION(sInput)
 WRITE_OUTPUT(sOutput)
