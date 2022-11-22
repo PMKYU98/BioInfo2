@@ -14,6 +14,12 @@ def PRINT_EDGES(Tree):
     for edge in Tree:
         print(edge[2])
 
+def WRITE_EDGES(Tree):
+    outputfile = '221115/221115_Q1_output.txt'
+    with open(outputfile, 'w') as f:
+        for edge in Tree:
+            f.write(edge[2] + '\n')
+
 def READ_EDGE(v, w, Tree):
     for edge in Tree:
         if edge[0] != v: continue
@@ -72,7 +78,6 @@ def SUFFIX_TREE(sInput):
     dicChildren = {}
 
     lSuffices = sorted([sInput[i:] for i in range(len(sInput))])
-    print(lSuffices)
     Tree, dicChildren = ADD_EDGE(0, 1, lSuffices[0], Tree, dicChildren)
     MAXNODE = 1
 
@@ -84,23 +89,29 @@ def SUFFIX_TREE(sInput):
 def FIND_NONBRANCHING(dicChildren):
     return [key for key in dicChildren if len(dicChildren[key]) == 1]
 
-def PATH_HELPER(current, stack, nonbranching, dicChildren):
-    _stack, _nonbranching = stack, nonbranching
-    _stack.append(current)
-    _nonbranching.remove(current)
+stack = []
+nonbranching = []
 
+def PATH_HELPER(current, dicChildren):
+    global stack, nonbranching
+
+    stack.append(current)
+    nonbranching.remove(current)
     if current in dicChildren:
         child = dicChildren[current][0]
-        if child in _nonbranching:
-            _stack, _nonbranching = PATH_HELPER(child, _stack, _nonbranching, dicChildren)
+        if child in nonbranching:
+            stack, nonbranching = PATH_HELPER(child, dicChildren)
     
-    return _stack, _nonbranching
+    return stack, nonbranching
         
-def PATH_NONBRANCHING(nonbranching, dicChildren):
+def PATH_NONBRANCHING(dicChildren):
+    global stack, nonbranching
+
     lPaths = []
     while len(nonbranching) > 0:
-        stack, nonbranching = PATH_HELPER(nonbranching[0], [], nonbranching, dicChildren)
+        stack, nonbranching = PATH_HELPER(nonbranching[0], dicChildren)
         lPaths.append(stack)
+        stack = []
 
     return lPaths
 
@@ -124,11 +135,10 @@ def MERGE_PATH(lPaths, Tree, dicChildren):
     return Tree, dicChildren
 
 
-inputfile = '221115/221115_Q1_input1.txt'
+inputfile = '221115/221115_Q1_input2.txt'
 sInput = PARSE(inputfile)
 Tree, dicChildren = SUFFIX_TREE(sInput)
-#PRINT_TREE(Tree)
 nonbranching = FIND_NONBRANCHING(dicChildren)
-lPaths = PATH_NONBRANCHING(nonbranching, dicChildren)
+lPaths = PATH_NONBRANCHING(dicChildren)
 Tree, dicChildren = MERGE_PATH(lPaths, Tree, dicChildren)
-PRINT_EDGES(Tree)
+WRITE_EDGES(Tree)
