@@ -27,6 +27,6 @@ def PATH_PROB(sPath, States, lstProb):
     return prob
 
 
-inputfile = '221129/221129_Q1_input1.txt'
-sPath, States, lstProb = PARSE(inputfile)
+inputfile = '221129/221129_Q1_input2.txt'
+sPath, States, lstProb = PARSE(inputfile, '\t')
 print(PATH_PROB(sPath, States, lstProb))
