@@ -55,8 +55,8 @@ def FORWARD():
 
     return lstScores
 
-inputfile = '221129/221129_Q4_input1.txt'
-sString, Alphabet, States, lstTransProb, lstEmitProb = PARSE(inputfile)
+inputfile = '221129/221129_Q4_input3.txt'
+sString, Alphabet, States, lstTransProb, lstEmitProb = PARSE(inputfile, '\t')
 
 lstScores = FORWARD()
 print(sum(lstScores[-1]))
