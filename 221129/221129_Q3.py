@@ -81,9 +81,11 @@ def BACKTRACK(lstScores, lstBacktrack):
     return ''.join(reversed(backtrack))
         
 
-inputfile = '221129/221129_Q3_input2.txt'
-sString, Alphabet, States, lstTransProb, lstEmitProb = PARSE(inputfile, '\t')
+inputfile = '221129/221129_Q3_input1.txt'
+sString, Alphabet, States, lstTransProb, lstEmitProb = PARSE(inputfile)
 
 lstScores, lstBacktrack = VITERBI()
+for l in lstBacktrack:
+    print(l)
 backtrack = BACKTRACK(lstScores, lstBacktrack)
 print(backtrack)

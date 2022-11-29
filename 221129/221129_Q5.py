@@ -136,9 +136,11 @@ def CALC_EMIT(Alphabet, States, lstIMD, lstAlign):
     return lstEmitProb
 
 
-inputfile = '221129/221129_Q5_input2.txt'
+inputfile = '221129/221129_Q5_input3.txt'
 Threshold, Alphabet, lstAlign = PARSE(inputfile, '\t')
 States, lstIMD, lstTransProb = CALC_TRANS(lstAlign)
+
+print(States)
 
 lstEmitProb = CALC_EMIT(Alphabet, States, lstIMD, lstAlign)
 WRITE_ANSWER(States, Alphabet, lstTransProb, lstEmitProb)

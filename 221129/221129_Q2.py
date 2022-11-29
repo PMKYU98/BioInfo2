@@ -26,6 +26,6 @@ def PATH_PROB(sString, Alphabet, sEmission, States, lstProb):
     return prob
 
 
-inputfile = '221129/221129_Q2_input2.txt'
-sString, Alphabet, sEmission, States, lstProb = PARSE(inputfile, '\t')
+inputfile = '221129/221129_Q2_input1.txt'
+sString, Alphabet, sEmission, States, lstProb = PARSE(inputfile)
 print(PATH_PROB(sString, Alphabet, sEmission, States ,lstProb))
