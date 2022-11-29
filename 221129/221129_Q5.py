@@ -36,27 +36,34 @@ def SAY_IMD(lstIMDPrev, lstChar):
 
     if IS_INSERTION(lstChar):
         for i in range(len(lstChar)):
-            if lstChar[i] == '-': temp.append('P')
+            if lstChar[i] == '-': temp.append('P' + lstIMDPrev[i][-1])
             else:
                 if lstIMDPrev[i][0] == 'I': temp.append(lstIMDPrev[i])
                 else: temp.append('I' + lstIMDPrev[i][-1])
 
+        return True, temp
     else:
         for i in range(len(lstChar)):
             if lstChar[i] == '-': temp.append('D' + str(int(lstIMDPrev[i][-1]) + 1))
             else: temp.append('M' + str(int(lstIMDPrev[i][-1]) + 1))
     
-    return temp
+        return False, temp
 
 def TRANS_COUNT(lstIMD):
     dicTransNext = {}
-    for i in range(len(lstIMD[0]) - 1):
-         for j in range(len(lstIMD)):
-            l = lstIMD[j][i]
-            k = lstIMD[j][i+1]
-            dicTransNext.setdefault(l, [])
-            dicTransNext[l].append(k)
-
+    for i in range(len(lstIMD)):
+        j = 0
+        k = 0
+        while j < len(lstIMD[i]) - 1:
+            k = k + 1
+            
+            if lstIMD[i][k][0] == 'P':
+                continue
+            else:
+                dicTransNext.setdefault(lstIMD[i][j], [])
+                dicTransNext[lstIMD[i][j]].append(lstIMD[i][k])
+                j = k
+        
     return dicTransNext
 
 def EMIT_COUNT(lstAlign, lstIMD):
@@ -75,10 +82,12 @@ def EMIT_COUNT(lstAlign, lstIMD):
 def CALC_TRANS(lstAlign):
     lstIMD = [['S0'] for _ in range(len(lstAlign))]
     temp = ['S0'] * len(lstAlign)
+    insertion = 0
     for i in range(len(lstAlign[0])):
-        temp = SAY_IMD(temp, [sequence[i] for sequence in lstAlign])
+        inserted, temp = SAY_IMD(temp, [sequence[i] for sequence in lstAlign])
         for j in range(len(temp)):
             lstIMD[j].append(temp[j])
+        if inserted: insertion += 1
 
     for j in range(len(temp)):
             lstIMD[j].append('E')
@@ -86,7 +95,7 @@ def CALC_TRANS(lstAlign):
     dicTransNext = TRANS_COUNT(lstIMD)
     
     States = ['S0']
-    for step in range(len(lstAlign[0])):
+    for step in range(len(lstAlign[0]) - insertion):
         States.append('I' + str(step))
         States.append('M' + str(step + 1))
         States.append('D' + str(step + 1))
@@ -127,8 +136,9 @@ def CALC_EMIT(Alphabet, States, lstIMD, lstAlign):
     return lstEmitProb
 
 
-inputfile = '221129/221129_Q5_input1.txt'
-Threshold, Alphabet, lstAlign = PARSE(inputfile)
+inputfile = '221129/221129_Q5_input2.txt'
+Threshold, Alphabet, lstAlign = PARSE(inputfile, '\t')
 States, lstIMD, lstTransProb = CALC_TRANS(lstAlign)
+
 lstEmitProb = CALC_EMIT(Alphabet, States, lstIMD, lstAlign)
 WRITE_ANSWER(States, Alphabet, lstTransProb, lstEmitProb)
