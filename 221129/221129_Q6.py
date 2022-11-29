@@ -174,8 +174,8 @@ def PSEUDOCOUNT(States, Alphabet, Pseudocount, lstTransProb, lstEmitProb):
         lstTransProbNew.append(temp)
 
 
-inputfile = '221129/221129_Q6_input1.txt'
-Threshold, Pseudocount, Alphabet, lstAlign = PARSE(inputfile)
+inputfile = '221129/221129_Q6_input2.txt'
+Threshold, Pseudocount, Alphabet, lstAlign = PARSE(inputfile, '\t')
 States, lstIMD, lstTransProb = CALC_TRANS(lstAlign)
 
 lstEmitProb = CALC_EMIT(Alphabet, States, lstIMD, lstAlign)
