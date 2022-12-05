@@ -33,7 +33,7 @@ def WRITE_ANSWER(States, Alphabet, lstTransProb, lstEmitProb):
 
 def IS_INSERTION(lstChar):
     global Threshold
-    return lstChar.count('-') / len(lstChar) > Threshold
+    return lstChar.count('-') / len(lstChar) >= Threshold
 
 def SAY_IMD(lstIMDPrev, lstChar):
     temp = []
@@ -177,6 +177,146 @@ def PSEUDOCOUNT(States, Alphabet, Pseudocount, lstTransProb, lstEmitProb):
 
         lstTransProbNew.append(temp)
 
+def ZERO_COL(lstTransProb, States):
+    tempScores, tempBacktrack = [0], ['O']
+    for state in States:
+        if state[0] == 'D':
+            if state[1] == '1':
+                tempScores.append(log10(lstTransProb[0][3]))
+                tempBacktrack.append('S')
+                continue
+            i = int(state[1]) - 1
+            tempScores.append(tempScores[-1] + log10(lstTransProb[States.index('D' + str(i))][States.index(state)]))
+            tempBacktrack.append('D' + str(i))
+
+    return tempScores, tempBacktrack
+
+def FIRST_COL(lstScores, lstTransProb, lstEmitProb, String, Alphabet, States):
+    tempScores, tempBacktrack = [], []
+    zero_col = lstScores[0]
+    for i in range(1, len(States) - 1):
+        if i == 1 or i == 2: 
+            tempScores.append(log10(lstTransProb[0][i]) + log10(lstEmitProb[i][Alphabet.index(String[0])]))
+            tempBacktrack.append('S')
+        elif i == 3:
+            tempScores.append(tempScores[0] + log10(lstTransProb[1][3]))
+            tempBacktrack.append('I0')
+        else:
+            if States[i][0] == 'D':
+                # from M: i - 4, from D: i - 3, from I: i - 2
+                j = str(int(States[i][1]) - 1)
+                match_j, del_j, ins_j = 'M'+j, 'D'+j, 'I'+j
+                match_score = tempScores[i - 1 - 4] + log10(lstTransProb[States.index(match_j)][i])
+                del_score = tempScores[i - 1 - 3] + log10(lstTransProb[States.index(del_j)][i])
+                ins_score = tempScores[i - 1 - 2] + log10(lstTransProb[States.index(ins_j)][i])
+
+                if match_score >= del_score:
+                    if match_score >= ins_score:
+                        tempScores.append(match_score)
+                        tempBacktrack.append(match_j)
+                    else:
+                        tempScores.append(ins_score)
+                        tempBacktrack.append(ins_j)
+                else:
+                    if del_score >= ins_score:
+                        tempScores.append(del_score)
+                        tempBacktrack.append(del_j)
+                    else:
+                        tempScores.append(ins_score)
+                        tempBacktrack.append(ins_j)
+            else:
+                if States[i][0] == 'I': j = int(States[i][1])
+                elif States[i][0] == 'M': j = int(States[i][1]) - 1
+                tempScores.append(zero_col[j] + \
+                    log10(lstTransProb[States.index('D' + str(j))][i]) + \
+                    log10(lstEmitProb[i][Alphabet.index(String[0])]))
+                tempBacktrack.append('D' + str(j))
+
+    return tempScores, tempBacktrack
+
+def OTHER_COL(n, lstScores, lstTransProb, lstEmitProb, String, Alphabet, States):
+    tempScores, tempBacktrack = [], []
+    zero_col = lstScores[-1]
+    for i in range(1, len(States) - 1):
+        if i == 1 or i == 2: 
+            tempScores.append(log10(lstTransProb[1][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])]))
+            tempBacktrack.append('I0')
+        elif i == 3:
+            tempScores.append(tempScores[0] + log10(lstTransProb[1][3]))
+            tempBacktrack.append('I0')
+        else:
+            if States[i][0] == 'D':
+                # from M: i - 4, from D: i - 3, from I: i - 2
+                j = str(int(States[i][1]) - 1)
+                match_j, del_j, ins_j = 'M'+j, 'D'+j, 'I'+j
+                match_score = tempScores[i - 1 - 4] + log10(lstTransProb[States.index(match_j)][i])
+                del_score = tempScores[i - 1 - 3] + log10(lstTransProb[States.index(del_j)][i])
+                ins_score = tempScores[i - 1 - 2] + log10(lstTransProb[States.index(ins_j)][i])
+
+            elif States[i][0] == 'I':
+                j = str(int(States[i][1]))
+                match_j, del_j, ins_j = 'M'+j, 'D'+j, 'I'+j
+                match_score = zero_col[i - 3] + log10(lstTransProb[States.index(match_j)][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])])
+                del_score = zero_col[i - 2] + log10(lstTransProb[States.index(del_j)][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])])
+                ins_score = zero_col[i - 1] + log10(lstTransProb[States.index(ins_j)][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])])
+
+            elif States[i][0] == 'M': 
+                j = str(int(States[i][1]) - 1)
+                match_j, del_j, ins_j = 'M'+j, 'D'+j, 'I'+j
+                match_score = zero_col[i - 4] + log10(lstTransProb[States.index(match_j)][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])])
+                del_score = zero_col[i - 3] + log10(lstTransProb[States.index(del_j)][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])])
+                ins_score = zero_col[i - 2] + log10(lstTransProb[States.index(ins_j)][i]) + log10(lstEmitProb[i][Alphabet.index(String[n])])
+
+            if match_score >= del_score:
+                if match_score >= ins_score:
+                    tempScores.append(match_score)
+                    tempBacktrack.append(match_j)
+                else:
+                    tempScores.append(ins_score)
+                    tempBacktrack.append(ins_j)
+            else:
+                if del_score >= ins_score:
+                    tempScores.append(del_score)
+                    tempBacktrack.append(del_j)
+                else:
+                    tempScores.append(ins_score)
+                    tempBacktrack.append(ins_j)
+
+    return tempScores, tempBacktrack
+
+def VITERBI(String, lstTransProb, lstEmitProb, States):
+    tempScores, tempBacktrack = ZERO_COL(lstTransProb, States)
+    lstScores, lstBacktrack = [tempScores], [tempBacktrack]
+
+    tempScores, tempBacktrack = FIRST_COL(lstScores, lstTransProb, lstEmitProb, String, Alphabet, States)
+    lstScores.append(tempScores)
+    lstBacktrack.append(tempBacktrack)
+
+    for n in range(len(String)):
+        tempScores, tempBacktrack = OTHER_COL(n, lstScores, lstTransProb, lstEmitProb, String, Alphabet, States)
+        lstScores.append(tempScores)
+        lstBacktrack.append(tempBacktrack)
+
+    return lstScores, lstBacktrack
+
+def BACKTRACK(States, lstScores, lstBacktrack):
+    _States = States[1:-1]
+
+    temp = lstScores[-1][-3:]
+    temp_max = temp.index(max(temp))
+    curr = _States[-3:][temp_max]
+
+    backtrack = [curr]
+    i = -1
+    while curr != 'S':
+        idx = _States.index(curr)
+        curr = lstBacktrack[i][idx]
+        backtrack.append(curr)
+        i -= 1
+
+    return ' '.join(reversed(backtrack[:-1]))
+
+
 inputfile = '221206/221206_Q1_input1.txt'
 String, Threshold, Pseudocount, Alphabet, lstAlign = PARSE(inputfile)
 States, lstIMD, lstTransProb = CALC_TRANS(lstAlign)
@@ -184,3 +324,6 @@ States, lstIMD, lstTransProb = CALC_TRANS(lstAlign)
 lstEmitProb = CALC_EMIT(Alphabet, States, lstIMD, lstAlign)
 lstEmitProb, lstTransProb = PSEUDOCOUNT(States, Alphabet, Pseudocount, lstTransProb, lstEmitProb)
 WRITE_ANSWER(States, Alphabet, lstTransProb, lstEmitProb)
+
+lstScores, lstBacktrack = VITERBI(String, lstTransProb, lstEmitProb, States)
+print(BACKTRACK(States, lstScores, lstBacktrack))

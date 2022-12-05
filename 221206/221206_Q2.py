@@ -58,7 +58,7 @@ def CALCULATE(dicTransition, dicEmission, States, Alphabet):
 
     return lstTransProb, lstEmitProb
 
-inputfile = '221206/221206_Q2_input1.txt'
+inputfile = '221206/221206_Q2_input2.txt'
 String, Alphabet, Path, States = PARSE(inputfile)
 dicEmission, dicTransition = EXPLORE(String, Path, States)
 lstTransProb, lstEmitProb = CALCULATE(dicTransition, dicEmission, States, Alphabet)
