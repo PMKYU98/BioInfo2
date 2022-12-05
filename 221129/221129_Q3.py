@@ -83,7 +83,7 @@ def BACKTRACK(lstScores, lstBacktrack):
 
 inputfile = '221129/221129_Q3_input1.txt'
 sString, Alphabet, States, lstTransProb, lstEmitProb = PARSE(inputfile)
-
+print(sString)
 lstScores, lstBacktrack = VITERBI()
 for l in lstBacktrack:
     print(l)
