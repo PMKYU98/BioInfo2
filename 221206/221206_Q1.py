@@ -181,11 +181,14 @@ def ZERO_COL(lstTransProb, States):
     tempScores, tempBacktrack = [0], ['O']
     for state in States:
         if state[0] == 'D':
+            print(state)
+            print(tempScores)
             if state[1] == '1':
                 tempScores.append(log10(lstTransProb[0][3]))
                 tempBacktrack.append('S')
                 continue
             i = int(state[1]) - 1
+            print(lstTransProb[States.index('D' + str(i))][States.index(state)])
             tempScores.append(tempScores[-1] + log10(lstTransProb[States.index('D' + str(i))][States.index(state)]))
             tempBacktrack.append('D' + str(i))
 
@@ -317,7 +320,7 @@ def BACKTRACK(States, lstScores, lstBacktrack):
     return ' '.join(reversed(backtrack[:-1]))
 
 
-inputfile = '221206/221206_Q1_input1.txt'
+inputfile = '221206/221206_Q1_input2.txt'
 String, Threshold, Pseudocount, Alphabet, lstAlign = PARSE(inputfile)
 States, lstIMD, lstTransProb = CALC_TRANS(lstAlign)
 
