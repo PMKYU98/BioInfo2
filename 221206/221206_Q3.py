@@ -1,5 +1,4 @@
 import numpy as np
-from math import log10
 
 def PARSE(inputfile):
     fInput = open(inputfile, 'r')
