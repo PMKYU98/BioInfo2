@@ -45,7 +45,14 @@ def construct_profile_hmm(threshold, alphabet, msa, pseudocount=0.01):
 
     # Add pseudocounts
     for state in states:
-        if state[0] in 'SE':
+        if state[0] == 'E':
+            continue
+        elif state[0] == 'S':
+            outgoing = ['I0', 'M1', 'D1']
+            outgoing = [state2i[s] for s in outgoing]
+            probspace = state2i[state], outgoing
+            newprob = trprob[probspace] + pseudocount
+            trprob[probspace] = newprob / newprob.sum()
             continue
 
         snum = int(state[1:])
@@ -90,7 +97,7 @@ def PARSE(inputfile):
 
     trprob, emprob, states = construct_profile_hmm(threshold, alphabet, msa, pseudocount)
 
-    return sequence, alphabet2i, trprob, emprob, states
+    return sequence, alphabet2i, trprob, emprob, states, alphabet
 
 def phmm_topological_order(obslen, states):
     state2i = {stname: i for i, stname in enumerate(states)}
@@ -108,36 +115,126 @@ def phmm_topological_order(obslen, states):
     # Generate 'E' state
     yield (obslen, state2i['E'])
 
-def viterbi(observation, initprob, trprob, emprob):
-    nstates = len(initprob)
+def zerocol(trprob, states):
+    state2i = {stname: i for i, stname in enumerate(states)}
+    nmatches = sum([s[0] == 'M' for s in states])
+    initprob = [1]
+    initback = ['S']
 
-    probprod = np.zeros([nstates, len(observation)], dtype=np.float64)
-    backtrack = np.zeros([nstates, len(observation)], dtype=np.int16)
+    # Generate the first column for initial deletions
+    for k in range(1, nmatches + 1):
+        initprob.append(initprob[-1] * trprob[3*(k-1),3*k])
+        if k-1 == 0:initback.append(0)
+        else: initback.append(k-1)
 
-    probprod[:, 0] = emprob[:, observation[0]] * initprob
+    return initprob, initback
 
+def firstcol(observation, initprob, trprob, emprob, states):
+    state2i = {stname: i for i, stname in enumerate(states)}
+    _states = states[1:-1]
+    nstates = len(_states)
+    obslen = len(observation)
+
+    probprod = np.zeros([nstates, obslen], dtype=np.float64)
+    back1 = np.zeros([nstates, obslen], dtype=np.int16)
+    back2 = np.zeros([nstates, obslen], dtype=np.int16)
+
+    j, obs = 0, observation[0]
+    for s in range(nstates):
+        state = _states[s]
+        k = int(state[1])
+        if _states[s][0] == 'I': 
+            probprod[s, 0] = initprob[k] * trprob[state2i[states[3*k]], state2i[state]] * emprob[s+1, obs]
+            back1[s, 0], back2[s, 0] = (-1, k)
+
+        elif _states[s][0] == 'M': 
+            probprod[s, 0] = initprob[k-1] * trprob[state2i[states[3*(k-1)]], state2i[state]] * emprob[s+1, obs]
+            back1[s, 0], back2[s, 0] = (-1, k-1)
+        elif _states[s][0] == 'D': 
+            if k > 1:
+                incoming_prob = [probprod[s-4, 0] * trprob[s - 3, s + 1],
+                    probprod[s-3, 0] * trprob[s - 2, s + 1],
+                    probprod[s-2, 0] * trprob[s - 1, s + 1]]
+                l = np.argmax(incoming_prob)
+                probprod[s, j] = incoming_prob[l]
+                back1[s, 0], back2[s, 0] = (0, s - 4 + l)
+            else:
+                probprod[s, 0] = probprod[s-2, 0] * trprob[s - 1, s + 1]
+                back1[s, 0], back2[s, 0] = (0, s - 2)
+    
+    return probprod, back1, back2
+
+def viterbi(observation, trprob, emprob, states):
+    initprob, initback = zerocol(trprob, states)
+    probprod, back1, back2 = firstcol(observation, initprob, trprob, emprob, states)
+
+    state2i = {stname: i for i, stname in enumerate(states)}
+    _states = states[1:-1]
+    nstates = len(_states)
+    
     for j, obs in enumerate(observation[1:], 1):
         for s in range(nstates):
-            k = np.argmax(probprod[:, j-1] * trprob[:, s] * emprob[s, obs])
-            probprod[s, j] = probprod[k, j-1] * trprob[k, s] * emprob[s, obs]
-            backtrack[s, j] = k
+            state = _states[s]
+            k = int(state[1])
 
+            if _states[s][0] == 'I':
+                if k == 0:
+                    probprod[s, j] = probprod[s, j-1] * trprob[state2i[states[3*k]], state2i[state]] * emprob[s+1, obs]
+                    back1[s, j], back2[s, j] = (j-1, k)
+                else: 
+                    incoming_prob = [probprod[s-2, j-1] * trprob[s - 1, s + 1] * emprob[s+1, obs],
+                    probprod[s-1, j-1] * trprob[s, s + 1] * emprob[s+1, obs],
+                    probprod[s, j-1] * trprob[s + 1, s + 1] * emprob[s+1, obs]]
+                    l = np.argmax(incoming_prob)
+                    probprod[s, j] = incoming_prob[l]
+                    back1[s, j], back2[s, j] = (j-1, s - 2 + l)
+            elif _states[s][0] == 'M':
+                if k == 1:
+                    probprod[s, j] = probprod[s-1, j-1] * trprob[state2i['I0'], state2i[state]] * emprob[s+1, obs]
+                    back1[s, j], back2[s, j] = (j-1, s-1)
+                else: 
+                    incoming_prob = [probprod[s-3, j-1] * trprob[s - 2, s + 1] * emprob[s+1, obs],
+                    probprod[s-2, j-1] * trprob[s-1, s + 1] * emprob[s+1, obs],
+                    probprod[s-1, j-1] * trprob[s, s + 1] * emprob[s+1, obs]]
+                    l = np.argmax(incoming_prob)
+                    probprod[s, j] = incoming_prob[l]
+                    back1[s, j], back2[s, j] = (j-1, s - 3 + l)
+            elif _states[s][0] == 'D': 
+                if k > 1:
+                    incoming_prob = [probprod[s-4, 0] * trprob[s - 3, s + 1],
+                        probprod[s-3, 0] * trprob[s - 2, s + 1],
+                        probprod[s-2, 0] * trprob[s - 1, s + 1]]
+                    l = np.argmax(incoming_prob)
+                    probprod[s, j] = incoming_prob[l]
+                    back1[s, j], back2[s, j] = (j, s - 4 + l)
+                else:
+                    probprod[s, 0] = probprod[s-2, 0] * trprob[s - 1, s + 1]
+                    back1[s, j], back2[s, j] = (j, s - 2)
+    
     best_path = []
-    k = np.argmax(probprod[:, -1])
-    for j in range(len(observation) - 1, -1, -1):
-        best_path.append(k)
-        k = backtrack[k, j]
+    k = 22 + np.argmax(probprod[:, -1][-3:])
+    j = len(observation) - 1
+    while j >= 0:
+        best_path.append(k + 1)
+        k = back2[k, j]
+        j = back1[k, j]
+
+    while k > 0:
+        best_path.append(f'D{k}')
+        k -= 1
+
     return best_path[::-1]
+    
 
 
 inputfile = '221206/221206_Q1_input1.txt'
-sequence, alphabet2i, trprob, emprob, states = PARSE(inputfile)
+sequence, alphabet2i, trprob, emprob, states, alphabet = PARSE(inputfile)
 observation = [alphabet2i[s] for s in sequence]
-initprob = [1 / len(states)] * len(states)
 
-decoded_states = viterbi(observation, initprob, trprob, emprob)
+import pandas as pd
+trprob_tbl = pd.DataFrame(trprob, index=states, columns=states)
+emprob_tbl = pd.DataFrame(emprob, index=states, columns=alphabet)
+
+decoded_states = viterbi(observation, trprob, emprob, states)
+
 print(' '.join([states[i] for i in decoded_states]))
-
-obslen = len(observation)
-for state in phmm_topological_order(obslen, states):
-    print(state)
