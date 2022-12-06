@@ -22,6 +22,22 @@ def PARSE(inputfile):
 
     return iter, sequence, alphabet2i, states2i, trprob, emprob, states, alphabet
 
+def WRITE_ANSWER(States, Alphabet, lstTransProb, lstEmitProb):
+    outputfile = '221206/221206_Q3_output.txt'
+    with open(outputfile, 'w') as f:
+        f.write('\t'.join(States) + '\n')
+        for i in range(len(lstTransProb)):
+            l = [States[i]]
+            l.extend(['%.3f' % x for x in lstTransProb[i]])
+            f.write('\t'.join(l) + '\n')
+        
+        f.write('--------\n')
+        f.write('\t' + '\t'.join(Alphabet) + '\n')
+        for i in range(len(lstEmitProb)):
+            l = [States[i]]
+            l.extend(['%.3f' % x for x in lstEmitProb[i]])
+            f.write('\t'.join(l) + '\n')
+
 def phmm_topological_order(obslen, states):
     # Generate toplogical ordering for the remaining columns
     for i in range(1, obslen + 1):
@@ -110,10 +126,9 @@ def VITERBI_LEARNING(iter, sequence, observation, trprob, emprob, states, alphab
 
     return trprob, emprob
 
-inputfile = '221206/221206_Q3_input1.txt'
+inputfile = '221206/221206_Q3_input2.txt'
 iter, sequence, alphabet2i, states2i, trprob, emprob, states, alphabet = PARSE(inputfile)
 observation = [alphabet2i[s] for s in sequence]
 
 trprob, emprob = VITERBI_LEARNING(iter, sequence, observation, trprob, emprob, states, alphabet)
-print(trprob)
-print(emprob)
+WRITE_ANSWER(states, alphabet, trprob, emprob)
