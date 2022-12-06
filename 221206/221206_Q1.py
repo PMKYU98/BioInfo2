@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from math import log10
 
 def construct_profile_hmm(threshold, alphabet, msa, pseudocount=0.01):
     # Assign the states with available alignments over the threshold
@@ -99,35 +100,15 @@ def PARSE(inputfile):
 
     return sequence, alphabet2i, trprob, emprob, states, alphabet
 
-def phmm_topological_order(obslen, states):
-    state2i = {stname: i for i, stname in enumerate(states)}
-    nmatches = sum([s[0] == 'M' for s in states])
-
-    # Generate the first column for initial deletions
-    for k in range(1, nmatches + 1):
-        yield (0, state2i[f'D{k}'])
-
-    # Generate toplogical ordering for the remaining columns
-    for i in range(1, obslen + 1):
-        for k in range(1, len(states) - 1): # except S, E
-            yield (i, k)
-
-    # Generate 'E' state
-    yield (obslen, state2i['E'])
-
 def zerocol(trprob, states):
-    state2i = {stname: i for i, stname in enumerate(states)}
     nmatches = sum([s[0] == 'M' for s in states])
     initprob = [1]
-    initback = ['S']
 
     # Generate the first column for initial deletions
     for k in range(1, nmatches + 1):
         initprob.append(initprob[-1] * trprob[3*(k-1),3*k])
-        if k-1 == 0:initback.append(0)
-        else: initback.append(k-1)
 
-    return initprob, initback
+    return initprob
 
 def firstcol(observation, initprob, trprob, emprob, states):
     state2i = {stname: i for i, stname in enumerate(states)}
@@ -165,8 +146,10 @@ def firstcol(observation, initprob, trprob, emprob, states):
     return probprod, back1, back2
 
 def viterbi(observation, trprob, emprob, states):
-    initprob, initback = zerocol(trprob, states)
+    initprob = zerocol(trprob, states)
+
     probprod, back1, back2 = firstcol(observation, initprob, trprob, emprob, states)
+    print(probprod)
 
     state2i = {stname: i for i, stname in enumerate(states)}
     _states = states[1:-1]
@@ -212,22 +195,24 @@ def viterbi(observation, trprob, emprob, states):
                     back1[s, j], back2[s, j] = (j, s - 2)
     
     best_path = []
-    k = 22 + np.argmax(probprod[:, -1][-3:])
+    k = len(_states) - 3 + np.argmax(probprod[:, -1][-3:])
     j = len(observation) - 1
+    
     while j >= 0:
+        print(j, k)
         best_path.append(k + 1)
         k = back2[k, j]
         j = back1[k, j]
 
     while k > 0:
-        best_path.append(f'D{k}')
+        best_path.append(k * 3)
         k -= 1
 
     return best_path[::-1]
     
 
 
-inputfile = '221206/221206_Q1_input1.txt'
+inputfile = '221206/221206_Q1_input2.txt'
 sequence, alphabet2i, trprob, emprob, states, alphabet = PARSE(inputfile)
 observation = [alphabet2i[s] for s in sequence]
 
