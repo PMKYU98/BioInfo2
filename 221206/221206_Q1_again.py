@@ -1,4 +1,5 @@
 import numpy as np
+from math import log10
 
 def construct_profile_hmm(threshold, alphabet, msa, pseudocount=0.01):
     # Assign the states with available alignments over the threshold
@@ -126,28 +127,28 @@ def backtrack(obslen, dicBack):
     return reversed(answer[1:])
 
 def viterbi(observation, trprob, emprob, states):
-    dicProb = {(0, 0): 1}
+    dicProb = {(0, 0): 0}
     dicBack = {}
 
     for step, state in phmm_topological_order(len(observation), states):
-        if step == 0: dicProb[(step, state)] = dicProb[(0, (state/3 - 1) * 3)] * trprob[state - 3, state]
+        if step == 0: dicProb[(step, state)] = dicProb[(0, (state/3 - 1) * 3)] + log10(trprob[state - 3, state])
         elif step == 1:
             obs = observation[step - 1]
             if state % 3 == 1:   # I
-                dicProb[(step, state)] = dicProb[(0, state-1)] * trprob[state - 1, state] * emprob[state, obs]
+                dicProb[(step, state)] = dicProb[(0, state-1)] + log10(trprob[state - 1, state]) + log10(emprob[state, obs])
                 dicBack[(step, state)] = (0, state-1)
             if state % 3 == 2:   # M
-                dicProb[(step, state)] = dicProb[(0, state-2)] * trprob[state - 2, state] * emprob[state, obs]
+                dicProb[(step, state)] = dicProb[(0, state-2)] + log10(trprob[state - 2, state]) + log10(emprob[state, obs])
                 dicBack[(step, state)] = (0, state-2)
             if state % 3 == 0:   # D
                 if state == 3:
-                    dicProb[(step, state)] = dicProb[(1, state-2)] * trprob[state - 2, state]
+                    dicProb[(step, state)] = dicProb[(1, state-2)] + log10(trprob[state - 2, state])
                     dicBack[(step, state)] = (1, state-2)
                 else:
                     #MDI
-                    lstProb = [dicProb[(1, state-4)] * trprob[state - 4, state],
-                    dicProb[(1, state-3)] * trprob[state - 3, state],
-                    dicProb[(1, state-2)] * trprob[state - 2, state]]
+                    lstProb = [dicProb[(1, state-4)] + log10(trprob[state - 4, state]),
+                    dicProb[(1, state-3)] + log10(trprob[state - 3, state]),
+                    dicProb[(1, state-2)] + log10(trprob[state - 2, state])]
                     k = np.argmax(lstProb)
                     dicProb[(step, state)] = lstProb[k]
                     dicBack[(step, state)] = (1, state-4+k)
@@ -160,37 +161,37 @@ def viterbi(observation, trprob, emprob, states):
             obs = observation[step - 1]
             if state % 3 == 1:   # I
                 if state == 1:
-                    dicProb[(step, state)] = dicProb[(step-1, state)] * trprob[state, state] * emprob[state, obs]
+                    dicProb[(step, state)] = dicProb[(step-1, state)] + log10(trprob[state, state]) + log10(emprob[state, obs])
                     dicBack[(step, state)] = (step-1, state)
                 else:
                     #MDI
-                    lstProb = [dicProb[(step-1, state-2)] * trprob[state - 2, state] * emprob[state, obs],
-                    dicProb[(step-1, state-1)] * trprob[state - 1, state] * emprob[state, obs],
-                    dicProb[(step-1, state)] * trprob[state, state] * emprob[state, obs]]
+                    lstProb = [dicProb[(step-1, state-2)] + log10(trprob[state - 2, state]) + log10(emprob[state, obs]),
+                    dicProb[(step-1, state-1)] + log10(trprob[state - 1, state]) + log10(emprob[state, obs]),
+                    dicProb[(step-1, state)] + log10(trprob[state, state]) + log10(emprob[state, obs])]
                     k = np.argmax(lstProb)
                     dicProb[(step, state)] = lstProb[k]
                     dicBack[(step, state)] = (step-1, state-2+k)
             if state % 3 == 2:   # M
                 if state == 2:
-                    dicProb[(step, state)] = dicProb[(step-1, state-1)] * trprob[state - 1, state] * emprob[state, obs]
+                    dicProb[(step, state)] = dicProb[(step-1, state-1)] + log10(trprob[state - 2, state]) + log10(emprob[state, obs])
                     dicBack[(step, state)] = (step-1, state-1)
                 else:
                     #MDI
-                    lstProb = [dicProb[(step-1, state-3)] * trprob[state - 3, state] * emprob[state, obs],
-                    dicProb[(step-1, state-2)] * trprob[state - 2, state] * emprob[state, obs],
-                    dicProb[(step-1, state-1)] * trprob[state - 1, state] * emprob[state, obs]]
+                    lstProb = [dicProb[(step-1, state-3)] + log10(trprob[state - 3, state]) + log10(emprob[state, obs]),
+                    dicProb[(step-1, state-2)] + log10(trprob[state - 2, state]) + log10(emprob[state, obs]),
+                    dicProb[(step-1, state-1)] + log10(trprob[state - 1, state]) + log10(emprob[state, obs])]
                     k = np.argmax(lstProb)
                     dicProb[(step, state)] = lstProb[k]
                     dicBack[(step, state)] = (step-1, state-3+k)
             if state % 3 == 0:   # D
                 if state == 3:
-                    dicProb[(step, state)] = dicProb[(step, state-2)] * trprob[state - 2, state]
+                    dicProb[(step, state)] = dicProb[(step, state-2)] + log10(trprob[state - 2, state])
                     dicBack[(step, state)] = (step, state-2)
                 else:
                     #MDI
-                    lstProb = [dicProb[(step, state-4)] * trprob[state - 4, state],
-                    dicProb[(step, state-3)] * trprob[state - 3, state],
-                    dicProb[(step, state-2)] * trprob[state - 2, state]]
+                    lstProb = [dicProb[(step, state-4)] + log10(trprob[state - 4, state]),
+                    dicProb[(step, state-3)] + log10(trprob[state - 3, state]),
+                    dicProb[(step, state-2)] + log10(trprob[state - 2, state])]
                     k = np.argmax(lstProb)
                     dicProb[(step, state)] = lstProb[k]
                     dicBack[(step, state)] = (step, state-4+k)
@@ -198,7 +199,7 @@ def viterbi(observation, trprob, emprob, states):
     return backtrack(len(observation), dicBack)
 
 
-inputfile = '221206/221206_Q1_input1.txt'
+inputfile = '221206/221206_Q1_input3.txt'
 sequence, alphabet2i, trprob, emprob, states = PARSE(inputfile)
 observation = [alphabet2i[s] for s in sequence]
 
